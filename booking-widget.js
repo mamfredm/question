@@ -50,6 +50,24 @@
  *               page react — e.g. show its own "see you then!" screen
  *               instead of leaving the visitor on the widget's built-in
  *               done screen.
+ *   fields      Optional. Which contact fields to show, in order.
+ *               Any of 'name', 'email', 'phone', 'note'. Defaults to all
+ *               four. 'email' is always included (bookings need it).
+ *               e.g. fields: ['email', 'note']
+ *   text        Optional. Override any UI text from the I18N table below
+ *               for this one embed, e.g. { email: 'Where should the
+ *               invite go?', book: 'Lock it in' }. Placeholders can be
+ *               set the same way: namePlaceholder, emailPlaceholder,
+ *               phonePlaceholder, notePlaceholder.
+ *   extra       Optional. Object (or function returning one) of extra
+ *               key/value strings sent along with the booking, e.g.
+ *               { food: 'Pizza 🍕', vibe: 'comfy' }. Code.gs shows them
+ *               in the calendar event, the emails and the .ics file.
+ *   consent     Optional. Shows a checkbox above the submit button.
+ *               { required: true } blocks booking until it's ticked.
+ *               Text comes from t.consent (plain text) or t.consentHtml
+ *               (HTML, e.g. with a link to your privacy policy) — set
+ *               either via the text option. Error: t.consentRequired.
  *   mock        Optional. Only used when endpoint is the string 'mock'.
  *               Lets you override the built-in demo data — see
  *               DEFAULT_MOCK below — with your own { businessName,
@@ -88,6 +106,8 @@
       errGeneric: 'Das hat leider nicht geklappt. Bitte versuche es erneut.',
       errTaken: 'Dieser Termin wurde gerade vergeben – bitte wähle einen anderen.',
       required: 'Bitte Name und eine gültige E-Mail angeben.',
+      consent: 'Ich habe die Datenschutzerklärung gelesen und stimme zu.',
+      consentRequired: 'Bitte stimme der Datenschutzerklärung zu.',
       weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
       months: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli',
                'August', 'September', 'Oktober', 'November', 'Dezember'],
@@ -114,6 +134,8 @@
       errGeneric: 'Something went wrong. Please try again.',
       errTaken: 'That time was just taken — please pick another slot.',
       required: 'Please enter your name and a valid email.',
+      consent: 'I have read and agree to the privacy policy.',
+      consentRequired: 'Please agree to the privacy policy.',
       weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
       months: ['January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December'],
@@ -174,6 +196,10 @@
   '.cbw-btn.pri{background:var(--cbw-accent);border-color:var(--cbw-accent)}' +
   '.cbw-btn:disabled{opacity:.55;cursor:default}' +
   '.cbw-err{color:#c0392b;font-size:13px;margin-top:10px}' +
+  '.cbw label.cbw-consent{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;' +
+    'font-size:13px;line-height:1.45;color:var(--cbw-ink);cursor:pointer}' +
+  '.cbw .cbw-consent input{width:18px;height:18px;flex:none;margin:1px 0 0;padding:0;accent-color:var(--cbw-accent)}' +
+  '.cbw .cbw-consent a{color:inherit}' +
   '.cbw-done{text-align:center;padding:14px 4px}' +
   '.cbw-done .ico{width:54px;height:54px;border-radius:50%;background:var(--cbw-accent);' +
     'display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px}' +
@@ -273,7 +299,12 @@
     if (!root) { console.error('[BookingWidget] element not found:', cfg.el); return; }
 
     var lang = cfg.lang === 'en' ? 'en' : 'de';
-    var t = I18N[lang];
+    var t = {};
+    Object.keys(I18N[lang]).forEach(function (k) { t[k] = I18N[lang][k]; });
+    if (cfg.text) Object.keys(cfg.text).forEach(function (k) { t[k] = cfg.text[k]; });
+
+    var fields = (cfg.fields && cfg.fields.length) ? cfg.fields.slice() : ['name', 'email', 'phone', 'note'];
+    if (fields.indexOf('email') === -1) fields.unshift('email');
     var mock = cfg.endpoint === 'mock';
 
     var box = el('div', 'cbw');
@@ -467,11 +498,30 @@
         v.appendChild(i);
         return i;
       }
-      var fName = field(t.name, 'input', 'text', 'name');
-      var fMail = field(t.email, 'input', 'email', 'email');
-      var fPhone = field(t.phone, 'input', 'tel', 'phone');
-      var fNote = field(t.note, 'textarea', null, 'note');
-      fNote.rows = 2;
+      var inputs = {};
+      fields.forEach(function (f) {
+        if (f === 'name')  inputs.name  = field(t.name, 'input', 'text', 'name');
+        if (f === 'email') inputs.email = field(t.email, 'input', 'email', 'email');
+        if (f === 'phone') inputs.phone = field(t.phone, 'input', 'tel', 'phone');
+        if (f === 'note')  { inputs.note = field(t.note, 'textarea', null, 'note'); inputs.note.rows = 2; }
+        if (inputs[f] && t[f + 'Placeholder']) inputs[f].placeholder = t[f + 'Placeholder'];
+      });
+      if (inputs.email) inputs.email.autocomplete = 'email';
+      if (inputs.name) inputs.name.autocomplete = 'name';
+      if (inputs.phone) inputs.phone.autocomplete = 'tel';
+      var fMail = inputs.email;
+
+      var fConsent = null;
+      if (cfg.consent) {
+        var cl = el('label', 'cbw-consent');
+        fConsent = el('input');
+        fConsent.type = 'checkbox';
+        var ct = el('span');
+        if (t.consentHtml) ct.innerHTML = t.consentHtml; else ct.textContent = t.consent;
+        cl.appendChild(fConsent);
+        cl.appendChild(ct);
+        v.appendChild(cl);
+      }
 
       var err = el('div', 'cbw-err');
       v.appendChild(err);
@@ -486,17 +536,30 @@
 
       submit.onclick = function () {
         err.textContent = '';
-        var name = fName.value.trim(), email = fMail.value.trim();
-        if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        var email = fMail.value.trim();
+        var nameOk = !inputs.name || inputs.name.value.trim();
+        if (!nameOk || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           err.textContent = t.required; return;
+        }
+        if (fConsent && cfg.consent.required && !fConsent.checked) {
+          err.textContent = t.consentRequired; return;
         }
         submit.disabled = back.disabled = true;
         submit.textContent = t.booking;
-        api(null, null, {
+        var payload = {
           service: state.service.id, date: state.date, time: state.time,
-          name: name, email: email,
-          phone: fPhone.value.trim(), note: fNote.value.trim(), lang: lang
-        }).then(function (r) {
+          email: email, lang: lang
+        };
+        // the name shown to the visitor (matters with forceService, where the
+        // backend's own service list doesn't know e.g. "Dinner: Pizza · …")
+        payload.serviceName = state.service.name;
+        if (fConsent) payload.consent = fConsent.checked;
+        var extra = typeof cfg.extra === 'function' ? cfg.extra() : cfg.extra;
+        if (extra) payload.extra = extra;
+        ['name', 'phone', 'note'].forEach(function (f) {
+          if (inputs[f]) payload[f] = inputs[f].value.trim();
+        });
+        api(null, null, payload).then(function (r) {
           if (r && r.ok) return renderDone();
           submit.disabled = back.disabled = false;
           submit.textContent = t.book;

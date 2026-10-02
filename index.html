@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🔔 important question 🔔</title>
+
+<!-- NEW: link preview when you send it via WhatsApp / iMessage, browser bar color, emoji favicon -->
+<meta property="og:title" content="🔔 important question 🔔">
+<meta property="og:description" content="one question, two buttons. choose wisely.">
+<meta name="description" content="one question, two buttons. choose wisely.">
+<meta name="theme-color" content="#24121f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💛</text></svg>">
+
 <style>
   /* ═══════════════════════════════════════════════════════════════
      PAGE STRUCTURE — 5 screens, only one visible at a time via
@@ -21,6 +29,10 @@
     --peach: #ffd9a0;
     --gold: #f2c17b;
     --paper: #fff7ee;
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: 'Helvetica Neue', Arial, sans-serif;
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --ease-pop: cubic-bezier(.34, 1.56, .64, 1);
   }
 
   * { box-sizing: border-box; }
@@ -31,9 +43,15 @@
     height: 100%;
     overflow: hidden;
     background: radial-gradient(circle at 30% 20%, var(--plum) 0%, var(--plum-deep) 70%);
-    font-family: 'Georgia', 'Iowan Old Style', serif;
+    font-family: var(--serif);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+  }
+
+  /* NEW: visible keyboard focus everywhere */
+  button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
   }
 
   /* ---- animated starfield behind everything ---- */
@@ -58,6 +76,33 @@
     50% { opacity: 0.9; transform: scale(1.3); }
   }
 
+  /* NEW: the odd shooting star */
+  .shooting {
+    position: absolute;
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,247,238,0), rgba(255,247,238,.9));
+    transform: rotate(-24deg);
+    opacity: 0;
+    animation: shoot 1.1s ease-out forwards;
+  }
+
+  @keyframes shoot {
+    0%   { opacity: 0; translate: 0 0; }
+    15%  { opacity: 1; }
+    100% { opacity: 0; translate: 260px 115px; }
+  }
+
+  /* small lowercase serif note above headings (replaces the old all-caps label) */
+  .eyebrow {
+    color: var(--gold);
+    font-style: italic;
+    font-size: 15px;
+    margin-bottom: 18px;
+    opacity: 0.9;
+    line-height: 1.5;
+  }
+
   /* ═══════════════════════════════════════════════════════════════
      SCREEN 1 — the ask (#stage): headline + the dodging Yes/No buttons
      ═══════════════════════════════════════════════════════════════ */
@@ -71,38 +116,57 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
     text-align: center;
   }
 
-  .eyebrow {
-    color: var(--gold);
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    font-size: 11px;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    margin-bottom: 18px;
-    opacity: 0.85;
+  /* NEW: one orchestrated entrance — the lines arrive one after another */
+  .stage > .eyebrow, .stage > h1, .stage > .sub {
+    animation: rise 0.9s var(--ease-out) backwards;
   }
+  .stage > h1   { animation-delay: 0.25s; }
+  .stage > .sub { animation-delay: 0.7s; }
+  /* buttons only fade (no transform!) — a transformed parent would
+     break the No button's position:fixed dodging */
+  .stage > .buttons { animation: fadeIn 0.8s ease 1.1s backwards; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes fadeIn { from { opacity: 0; } }
 
   h1 {
     color: var(--paper);
-    font-size: clamp(28px, 7vw, 52px);
+    font-size: clamp(30px, 7.5vw, 56px);
     font-weight: 400;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
-    max-width: 620px;
+    line-height: 1.2;
+    margin: 0 0 12px 0;
+    max-width: 640px;
+    text-wrap: balance;
   }
 
   .name {
     font-style: italic;
     color: var(--blush);
+    background: linear-gradient(100deg, var(--blush) 20%, var(--peach) 45%, var(--paper) 50%, var(--peach) 55%, var(--blush) 80%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 5s ease-in-out 1.6s infinite;
+    padding-right: 0.08em; /* italic overhang doesn't get clipped */
+  }
+
+  @keyframes shimmer {
+    0%, 60%  { background-position: 100% 0; }
+    100%     { background-position: 0% 0; }
   }
 
   .sub {
     color: var(--paper);
     opacity: 0.6;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 13px;
     margin-bottom: 48px;
     letter-spacing: 0.02em;
@@ -119,7 +183,7 @@
   }
 
   button {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     border: none;
     border-radius: 999px;
     cursor: pointer;
@@ -127,18 +191,22 @@
     letter-spacing: 0.02em;
   }
 
+  /* --yes-scale is bumped by JS as the No button keeps running away */
   #yes {
+    --yes-scale: 1;
+    position: relative;
+    z-index: 2;
     background: linear-gradient(135deg, var(--blush), var(--peach));
     color: var(--plum-deep);
     padding: 18px 34px;
     font-size: 17px;
     box-shadow: 0 8px 24px rgba(255, 180, 198, 0.35);
-    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), box-shadow 0.35s ease;
+    transform: scale(var(--yes-scale));
+    transition: transform 0.35s var(--ease-pop), box-shadow 0.35s ease;
   }
 
-  #yes:active {
-    transform: scale(0.96);
-  }
+  #yes:hover { box-shadow: 0 10px 34px rgba(255, 180, 198, 0.55); }
+  #yes:active { transform: scale(calc(var(--yes-scale) * 0.95)); }
 
   #no {
     background: rgba(255, 247, 238, 0.08);
@@ -158,7 +226,22 @@
   #no.fixed {
     position: fixed;
     z-index: 10;
-    transition: left 0.62s cubic-bezier(.16, 1, .3, 1), top 0.62s cubic-bezier(.16, 1, .3, 1), transform 0.18s ease;
+    transition: left 0.62s var(--ease-out), top 0.62s var(--ease-out), transform 0.3s ease, background 0.4s ease;
+  }
+
+  /* NEW: after enough dodges the No button gives up and becomes a second Yes */
+  #no.surrendered {
+    background: linear-gradient(135deg, var(--blush), var(--peach));
+    color: var(--plum-deep);
+    border-color: transparent;
+    box-shadow: 0 8px 24px rgba(255, 180, 198, 0.35);
+    animation: wiggle 0.6s ease 2;
+  }
+
+  @keyframes wiggle {
+    0%, 100% { rotate: 0deg; }
+    25% { rotate: -6deg; }
+    75% { rotate: 6deg; }
   }
 
   /* Caption ("nice try", "still no"...) is positioned dynamically via JS,
@@ -168,8 +251,9 @@
     z-index: 5;
     color: var(--paper);
     opacity: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 12px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
     text-align: center;
     width: 240px;
     margin-left: -120px; /* half of width, JS sets left = center point */
@@ -178,7 +262,7 @@
   }
 
   .caption.visible {
-    opacity: 0.5;
+    opacity: 0.6;
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -192,44 +276,77 @@
     inset: 0;
     display: none;
     align-items: center;
-    justify-content: center;
     flex-direction: column;
     text-align: center;
     background: radial-gradient(circle at 50% 40%, var(--plum) 0%, var(--plum-deep) 75%);
     z-index: 100;
-    padding: 24px;
+    padding: max(64px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
+    /* FIX: content taller than the phone (e.g. the calendar on an
+       iPhone SE) used to get cut off with no way to scroll */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* these two flexible spacers keep content vertically centered when it
+     fits, but collapse to 0 when it doesn't, so nothing gets clipped */
+  .screen::before, .screen::after {
+    content: '';
+    flex: 1 0 0;
   }
 
   .screen.show {
     display: flex;
+    animation: screenIn 0.55s var(--ease-out);
   }
+
+  @keyframes screenIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .screen.show > :not(.back-link) {
+    animation: rise 0.6s var(--ease-out) backwards;
+  }
+  .screen.show > :nth-child(3) { animation-delay: 0.06s; }
+  .screen.show > :nth-child(4) { animation-delay: 0.12s; }
+  .screen.show > :nth-child(5) { animation-delay: 0.18s; }
+  .screen.show > :nth-child(6) { animation-delay: 0.24s; }
 
   .screen h2 {
     color: var(--paper);
     font-size: clamp(26px, 7vw, 46px);
     font-weight: 400;
+    line-height: 1.2;
     margin: 0 0 10px 0;
+    max-width: 560px;
+    text-wrap: balance;
   }
 
   .screen p.tag {
     color: var(--blush);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 14px;
-    opacity: 0.75;
+    line-height: 1.5;
+    opacity: 0.8;
     margin: 0 0 40px 0;
+    max-width: 420px;
   }
 
   /* ---- SCREEN 2 (#burst): "you said yes" + button into screen 3 ---- */
   .sticker {
     width: 128px;
     height: 128px;
+    flex-shrink: 0;
     object-fit: cover;
     border-radius: 50%;
     border: 4px solid var(--paper);
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
     transform: rotate(-8deg);
     margin-bottom: 20px;
-    animation: stickerPop 0.5s cubic-bezier(.34, 1.56, .64, 1) both;
+  }
+
+  .screen.show > .sticker {
+    animation: stickerPop 0.5s var(--ease-pop) both;
   }
 
   @keyframes stickerPop {
@@ -237,10 +354,9 @@
     100% { opacity: 1; transform: rotate(-8deg) scale(1); }
   }
 
-  .sticker.alt {
-    transform: rotate(7deg);
-    animation-name: stickerPopAlt;
-  }
+  .sticker { --tilt: -8deg; }
+  .sticker.alt { --tilt: 7deg; transform: rotate(7deg); }
+  .screen.show > .sticker.alt { animation-name: stickerPopAlt; }
 
   @keyframes stickerPopAlt {
     0%   { opacity: 0; transform: rotate(7deg) scale(0.4); }
@@ -254,7 +370,7 @@
     border: 1px solid rgba(242, 193, 123, 0.5);
     padding: 14px 30px;
     font-size: 14px;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     border-radius: 999px;
     cursor: pointer;
     transition: background 0.25s ease, transform 0.2s ease;
@@ -277,9 +393,10 @@
   }
 
   @media (max-width: 420px) {
-    .craving-grid { grid-template-columns: repeat(2, minmax(100px, 140px)); }
+    .craving-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
   }
 
+  /* now real <button>s, so they work with keyboard too */
   .craving-card {
     background: rgba(255, 247, 238, 0.06);
     border: 1px solid rgba(255, 247, 238, 0.14);
@@ -287,7 +404,7 @@
     padding: 18px 10px;
     cursor: pointer;
     color: var(--paper);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 13px;
     font-weight: 600;
     display: flex;
@@ -299,12 +416,17 @@
 
   .craving-card .emoji {
     font-size: 28px;
+    transition: transform 0.3s var(--ease-pop);
   }
 
   .craving-card:hover {
     transform: translateY(-3px);
     background: rgba(255, 180, 198, 0.14);
     border-color: rgba(255, 180, 198, 0.4);
+  }
+
+  .craving-card:hover .emoji {
+    transform: scale(1.18) rotate(-6deg);
   }
 
   .craving-card:active {
@@ -316,6 +438,26 @@
     color: var(--plum-deep);
     border-color: transparent;
   }
+
+  .craving-card.selected .emoji {
+    animation: chomp 0.35s var(--ease-pop);
+  }
+
+  @keyframes chomp {
+    50% { transform: scale(1.45) rotate(8deg); }
+  }
+
+  /* NEW: the wide "cook at home" card under the grid */
+  .craving-card.wide {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 14px;
+    font-size: 14px;
+  }
+
+  .craving-card.wide .emoji { font-size: 24px; }
 
   /* the "Custom" card reveals this instead of jumping straight to booking */
   .custom-wrap {
@@ -331,14 +473,15 @@
   }
 
   .custom-wrap input {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     background: rgba(255, 247, 238, 0.08);
     border: 1px solid rgba(255, 247, 238, 0.25);
     color: var(--paper);
     padding: 12px 18px;
     border-radius: 999px;
-    font-size: 14px;
+    font-size: 16px;
     width: 260px;
+    max-width: 100%;
     text-align: center;
     outline: none;
   }
@@ -356,37 +499,414 @@
     color: var(--plum-deep);
     padding: 12px 26px;
     font-size: 13px;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-weight: 700;
     border-radius: 999px;
     cursor: pointer;
     border: none;
   }
 
-  /* ---- SCREEN 5 (#finalMsg): "it's a date" ---- */
-  #finalMsg {
-    display: none;
-    max-width: 480px;
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: WHEEL OF FORTUNE — overlay opened from screen 3 for the
+     indecisive. Segments are generated from the craving cards in JS
+     (see "WHEEL OF FORTUNE" in the script), so adding a food card
+     adds it to the wheel too.
+     ═══════════════════════════════════════════════════════════════ */
+
+  .wheel-link {
+    margin-top: 22px;
+    background: none;
+    color: var(--gold);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 14px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: rgba(242, 193, 123, 0.45);
   }
 
-  #finalMsg.show {
+  .wheel-link:hover { text-decoration-color: var(--gold); }
+
+  .wheel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    background: rgba(20, 8, 17, 0.78);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    overflow-y: auto;
+  }
+
+  .wheel-overlay[hidden] { display: none; }
+
+  .wheel-overlay::before, .wheel-overlay::after { content: ''; flex: 1 0 0; }
+
+  .wheel-overlay:not([hidden]) .wheel-card {
+    animation: rise 0.5s var(--ease-out);
+  }
+
+  .wheel-card {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  .wheel-card h2 {
+    color: var(--paper);
+    font-weight: 400;
+    font-size: clamp(26px, 7vw, 38px);
+    line-height: 1.2;
+    margin: 0 0 26px;
+  }
+
+  .wheel-close {
+    position: absolute;
+    top: -10px;
+    right: -6px;
+    background: none;
+    color: rgba(255, 247, 238, 0.55);
+    font-size: 30px;
+    font-weight: 300;
+    line-height: 1;
+    padding: 6px 12px;
+  }
+
+  .wheel-close:hover { color: var(--paper); }
+
+  .wheel-box {
+    position: relative;
+    width: min(76vw, 320px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+
+  #wheel {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+    will-change: transform;
+  }
+
+  /* the little flapper at the top that clicks against the pegs */
+  .wheel-pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    width: 28px;
+    height: 36px;
+    margin-left: -14px;
+    z-index: 2;
+    background: var(--gold);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    transform-origin: 50% 20%;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  .wheel-hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 72px;
+    height: 72px;
+    margin: -36px 0 0 -36px;
+    z-index: 2;
+    border-radius: 50%;
+    background: var(--plum-deep);
+    color: var(--gold);
+    border: 3px solid var(--gold);
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 18px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    transition: transform 0.2s var(--ease-pop);
+  }
+
+  .wheel-hub:hover:not(:disabled) { transform: scale(1.07); }
+  .wheel-hub:active:not(:disabled) { transform: scale(0.95); }
+  .wheel-hub:disabled { cursor: default; }
+
+  .wheel-result {
+    min-height: 1.4em;
+    margin: 26px 0 0;
+    color: var(--paper);
+    font-size: 21px;
+    line-height: 1.35;
+  }
+
+  .wheel-result.pop { animation: stickerPopFlat 0.45s var(--ease-pop); }
+
+  @keyframes stickerPopFlat {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .wheel-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 18px;
+  }
+
+  .wheel-actions[hidden] { display: none; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: EASTER EGGS + EXTRAS
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* sticker party: tap a sticker 5 times */
+  .screen.show > .sticker.party {
+    animation: stickerParty 0.9s var(--ease-pop);
+  }
+
+  @keyframes stickerParty {
+    0%   { transform: rotate(var(--tilt)) scale(1); }
+    45%  { transform: rotate(calc(var(--tilt) + 200deg)) scale(1.3); }
+    100% { transform: rotate(calc(var(--tilt) + 360deg)) scale(1); }
+  }
+
+  /* the "maybe" button that appears once the No button surrenders */
+  #maybe {
+    background: transparent;
+    color: var(--paper);
+    border: 1px dashed rgba(255, 247, 238, 0.4);
+    padding: 14px 24px;
+    font-size: 14px;
+    animation: stickerPopFlat 0.45s var(--ease-pop);
+  }
+
+  #maybe[hidden] { display: none; }
+
+  /* once "maybe" shows up, stack it under Yes so nothing overflows */
+  .buttons.has-maybe { flex-direction: column; gap: 30px; }
+  #maybe { white-space: nowrap; }
+
+  /* ---- vibe screen (between food and booking) ---- */
+  .vibe-emoji {
+    font-size: 64px;
+    line-height: 1;
+    margin: 4px 0 12px;
+  }
+
+  .vibe-emoji.pop { animation: stickerPopFlat 0.35s var(--ease-pop); }
+
+  .vibe-label {
+    color: var(--paper);
+    font-size: 22px;
+    font-style: italic;
+    min-height: 1.4em;
+    margin-bottom: 26px;
+  }
+
+  .vibe-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: min(320px, 100%);
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 247, 238, 0.15), var(--blush), var(--gold));
+    outline-offset: 8px;
+    cursor: pointer;
+  }
+
+  .vibe-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 4px solid var(--gold);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .vibe-range::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 4px solid var(--gold);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .vibe-ends {
+    display: flex;
+    justify-content: space-between;
+    width: min(320px, 100%);
+    margin-top: 12px;
+    color: rgba(255, 247, 238, 0.5);
+    font-family: var(--sans);
+    font-size: 12px;
+  }
+
+  .vibe-go { margin-top: 36px; }
+
+  /* ---- the ticket on the final screen ---- */
+  #finalMsg .sticker { width: 96px; height: 96px; margin-bottom: 14px; }
+
+  .ticket-wrap {
+    width: 100%;
+    max-width: 400px;
+    margin: 4px 0 22px;
+    filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.4));
+  }
+
+  .ticket {
+    --stub: 92px;
+    display: flex;
+    background: var(--paper);
+    color: var(--plum-deep);
+    border-radius: 14px;
+    transform: rotate(-1.5deg);
+    text-align: left;
+    /* the two half-circle notches at the perforation */
+    -webkit-mask:
+      radial-gradient(circle 11px at calc(100% - var(--stub)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 11px at calc(100% - var(--stub)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle 11px at calc(100% - var(--stub)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 11px at calc(100% - var(--stub)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+  }
+
+  .ticket-main {
+    flex: 1;
+    min-width: 0;
+    padding: 18px 18px 18px 20px;
+  }
+
+  .ticket-title {
+    font-style: italic;
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: var(--plum);
+  }
+
+  .ticket dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin: 0;
+  }
+
+  .ticket dl .wide { grid-column: 1 / -1; }
+
+  .ticket dt {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: rgba(36, 18, 31, 0.55);
+    margin-bottom: 2px;
+  }
+
+  .ticket dd {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .ticket-stub {
+    width: var(--stub);
+    flex: none;
+    border-left: 2px dashed rgba(36, 18, 31, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 10px;
+  }
+
+  .ticket-stub svg { width: 56px; height: 96px; display: block; }
+
+  .ticket-stub span {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: rgba(36, 18, 31, 0.6);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shake-hint { margin-top: 6px; font-size: 13px; }
+
+  /* the joke T&C checkbox inside the booking widget */
+  #bookingMount .cbw label.cbw-consent { color: rgba(36, 18, 31, 0.85); }
+  .wheel-actions .wheel-link { margin-top: 4px; }
+
+  /* ---- SCREEN 5 (#finalMsg): "it's a date" + live countdown ---- */
+  /* (FIX: the old max-width here squeezed the whole fixed overlay into a
+     480px strip on the left side of desktop screens) */
+
+  .countdown {
+    display: flex;
+    gap: clamp(14px, 5vw, 30px);
+    justify-content: center;
+    margin: 6px 0 26px;
+  }
+
+  .countdown[hidden] { display: none; }
+
+  .countdown div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.2ch;
+  }
+
+  .countdown b {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(38px, 11vw, 64px);
+    line-height: 1;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .countdown span {
+    margin-top: 8px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--paper);
+    opacity: 0.55;
   }
 
   /* ---- confetti burst, triggered on Yes ---- */
   .confetti-piece {
     position: fixed;
-    top: -20px;
+    top: -24px;
     border-radius: 2px;
     pointer-events: none;
     z-index: 101;
+    line-height: 1;
     animation: fall linear forwards;
   }
 
   @keyframes fall {
     to {
-      transform: translateY(110vh) rotate(600deg);
+      transform: translate(var(--drift, 0px), 110vh) rotate(var(--spin, 600deg));
     }
+  }
+
+  /* NEW: hearts that pop out of whichever button she pressed */
+  .heart-pop {
+    position: fixed;
+    z-index: 102;
+    pointer-events: none;
+    font-size: 22px;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+    animation: heartPop 1.1s var(--ease-out) forwards;
+  }
+
+  @keyframes heartPop {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(var(--rot)); }
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -400,33 +920,89 @@
      styling in it.
      ═══════════════════════════════════════════════════════════════ */
 
+  /* NEW: the widget is styled like the ticket on screen 5 — cream paper,
+     dark ink, notches on both sides, dashed "perforation" under the title */
   #bookingMount {
     width: 100%;
     max-width: 460px;
+    filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.4));
   }
 
   #bookingMount .cbw {
     --cbw-accent: var(--gold);
-    --cbw-ink: var(--paper);
-    --cbw-mut: rgba(255, 247, 238, 0.55);
-    --cbw-line: rgba(255, 247, 238, 0.18);
-    --cbw-bg: rgba(255, 247, 238, 0.05);
-    --cbw-soft: rgba(255, 247, 238, 0.09);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    --cbw-ink: var(--plum-deep);
+    --cbw-mut: rgba(36, 18, 31, 0.55);
+    --cbw-line: rgba(36, 18, 31, 0.16);
+    --cbw-bg: #fffdf9;
+    --cbw-soft: rgba(36, 18, 31, 0.06);
+    --cbw-radius: 16px;
+    background: var(--paper);
+    border: none;
+    font-family: var(--sans);
     text-align: left;
-    backdrop-filter: blur(6px);
+    -webkit-mask:
+      radial-gradient(circle 12px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle 12px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle 12px at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle 12px at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
   }
 
-  /* buttons that sit on the gold accent color need dark text for contrast */
-  #bookingMount .cbw-btn.pri {
+  #bookingMount .cbw h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--plum);
+    padding-bottom: 14px;
+    border-bottom: 2px dashed rgba(36, 18, 31, 0.18);
+    margin-bottom: 16px;
+  }
+
+  /* 16px inputs stop iOS from zooming into the form */
+  #bookingMount .cbw input,
+  #bookingMount .cbw textarea { font-size: 16px; }
+
+  #bookingMount .cbw input:focus,
+  #bookingMount .cbw textarea:focus { border-color: rgba(58, 31, 51, 0.6); }
+
+  /* FIX (kept): Safari can drop button text color when the widget animates
+     "color" through a CSS variable, so set it directly, strip native button
+     styling, and only animate border/background. */
+  #bookingMount .cbw-grid button,
+  #bookingMount .cbw-slots button,
+  #bookingMount .cbw-btn,
+  #bookingMount .cbw-nav {
     color: var(--plum-deep);
+    -webkit-text-fill-color: currentColor;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.12s ease, background 0.12s ease;
   }
 
+  #bookingMount .cbw-grid button:disabled {
+    color: rgba(36, 18, 31, 0.22);
+  }
+
+  #bookingMount .cbw-slots button:hover,
+  #bookingMount .cbw-btn:not(.pri):hover {
+    border-color: var(--plum);
+  }
+
+  #bookingMount .cbw input::placeholder,
+  #bookingMount .cbw textarea::placeholder {
+    color: rgba(36, 18, 31, 0.35);
+  }
+
+  #bookingMount .cbw label { line-height: 1.4; }
+
+  /* selected day stays gold even while hovered/tapped (iPhones keep hover after a tap) */
+  #bookingMount .cbw-grid button.sel { background: var(--gold); }
+
+  /* things that sit on the gold accent keep dark text */
+  #bookingMount .cbw-btn.pri,
   #bookingMount .cbw-grid button.sel,
-  #bookingMount .cbw-slots button.sel {
-    color: var(--plum-deep);
-  }
-
+  #bookingMount .cbw-slots button.sel,
   #bookingMount .cbw-done .ico {
     color: var(--plum-deep);
   }
@@ -436,7 +1012,7 @@
     background: none;
     border: none;
     color: rgba(255, 247, 238, 0.45);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 12px;
     text-decoration: underline;
     cursor: pointer;
@@ -445,12 +1021,12 @@
   /* ---- shared: the small "‹ back" links on screens 3 & 4 ---- */
   .back-link {
     position: absolute;
-    top: 22px;
-    left: 22px;
+    top: max(18px, env(safe-area-inset-top));
+    left: 18px;
     background: none;
     border: none;
     color: rgba(255, 247, 238, 0.45);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 13px;
     letter-spacing: 0.01em;
     cursor: pointer;
@@ -461,6 +1037,17 @@
   .back-link:hover {
     color: var(--paper);
   }
+
+  /* ---- respect "reduce motion" settings: keep it calm, keep it working ---- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-delay: 0s !important;
+    }
+    .confetti-piece, .heart-pop, .shooting { display: none; }
+    #no.fixed { transition: left 0.2s ease, top 0.2s ease; }
+  }
 </style>
 </head>
 <body>
@@ -469,23 +1056,24 @@
 
 <!-- Screen 1: the ask -->
 <div class="stage" id="stage">
-  <div class="eyebrow">Hello Hello 🌼 <br><br> a question sincerely asked</div>
+  <div class="eyebrow">hello hello 🌼<br>a question sincerely asked</div>
   <h1>You wanna go out with me,<br><span class="name">Awa</span>?</h1>
   <div class="sub">no wrong answers to choose here</div>
 
   <div class="buttons" id="buttonRow">
     <button id="yes">Yes, obviously</button>
     <button id="no">No</button>
+    <button id="maybe" hidden>maybe? (also yes)</button>
   </div>
 </div>
 
-<div class="caption" id="caption"></div>
+<div class="caption" id="caption" aria-live="polite"></div>
 
 <!-- Screen 2: she said yes, prompt to continue -->
 <div class="screen" id="burst">
   <img class="sticker" src="yeah_dog.webp" alt="">
   <h2>Wohoo! 🎉 <br> Look at that, main character behavior. </h2>
-  <p class="tag">That took embarrassingly long, but okay</p>
+  <p class="tag" id="burstTag">That took embarrassingly long, but okay</p>
   <button class="continue-btn" id="continueBtn">what are we eating? →</button>
 </div>
 
@@ -497,27 +1085,68 @@
   <p class="tag">pick one, or make up your own</p>
 
   <div class="craving-grid" id="cravingGrid">
-    <div class="craving-card" data-value="Pizza"><span class="emoji">🍕</span>Pizza</div>
-    <div class="craving-card" data-value="Pasta"><span class="emoji">🍝</span>Pasta</div>
-    <div class="craving-card" data-value="Salad"><span class="emoji">🥗</span>Salad</div>
-    <div class="craving-card" data-value="Asian"><span class="emoji">🍜</span>Asian</div>
-    <div class="craving-card" data-value="Sushi"><span class="emoji">🍣</span>Sushi</div>
-    <div class="craving-card" data-value="Meat"><span class="emoji">🥩</span>Meat</div>
-    <div class="craving-card" data-value="Afro"><span class="emoji">🍲</span>Afro</div>
-    <div class="craving-card" data-value="Burger"><span class="emoji">🍔</span>Burger</div>
-    <div class="craving-card" data-value="__custom" id="customCard"><span class="emoji">✨</span>Custom</div>
+    <button type="button" class="craving-card" data-value="Pizza"><span class="emoji">🍕</span>Pizza</button>
+    <button type="button" class="craving-card" data-value="Pasta"><span class="emoji">🍝</span>Pasta</button>
+    <button type="button" class="craving-card" data-value="Salad"><span class="emoji">🥗</span>Salad</button>
+    <button type="button" class="craving-card" data-value="Asian"><span class="emoji">🍜</span>Asian</button>
+    <button type="button" class="craving-card" data-value="Sushi"><span class="emoji">🍣</span>Sushi</button>
+    <button type="button" class="craving-card" data-value="Meat"><span class="emoji">🥩</span>Meat</button>
+    <button type="button" class="craving-card" data-value="Afro"><span class="emoji">🍲</span>Afro</button>
+    <button type="button" class="craving-card" data-value="Burger"><span class="emoji">🍔</span>Burger</button>
+    <button type="button" class="craving-card" data-value="__custom" id="customCard"><span class="emoji">✨</span>Custom</button>
+    <button type="button" class="craving-card wide" data-value="__home" id="homeCard"><span class="emoji">🍳</span>or we cook at home</button>
   </div>
 
   <div class="custom-wrap" id="customWrap">
-    <input type="text" id="customInput" placeholder="what are you thinking?" maxlength="40">
+    <input type="text" id="customInput" placeholder="what are you thinking?" maxlength="40" enterkeyhint="done">
     <button class="confirm-btn" id="customConfirm">that's the one</button>
   </div>
+
+  <!-- NEW: idea field for cooking at home (empty = chef's surprise) -->
+  <div class="custom-wrap" id="homeWrap">
+    <input type="text" id="homeInput" placeholder="any idea what we cook? (or leave it to me)" maxlength="50" enterkeyhint="done">
+    <button class="confirm-btn" id="homeConfirm">let's cook that 🍳</button>
+  </div>
+
+  <button type="button" class="wheel-link" id="openWheel">can't decide? let the wheel pick 🎡</button>
+</div>
+
+<!-- NEW: wheel of fortune overlay (opened from screen 3) -->
+<div class="wheel-overlay" id="wheelOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="wheelTitle">
+  <div class="wheel-card">
+    <button type="button" class="wheel-close" id="closeWheel" aria-label="Close the wheel">×</button>
+    <div class="eyebrow">for the beautifully indecisive</div>
+    <h2 id="wheelTitle">Let fate pick dinner</h2>
+    <div class="wheel-box">
+      <div class="wheel-pointer" id="wheelPointer"></div>
+      <svg id="wheel" viewBox="-150 -150 300 300" aria-hidden="true"></svg>
+      <button type="button" class="wheel-hub" id="spinBtn">spin</button>
+    </div>
+    <p class="wheel-result" id="wheelResult" aria-live="polite"></p>
+    <div class="wheel-actions" id="wheelActions" hidden>
+      <button type="button" class="confirm-btn" id="wheelAccept">deal, let's go</button>
+      <button type="button" class="wheel-link" id="wheelRespin">hmm, spin again</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW Screen 3b: vibe check / dress code -->
+<div class="screen" id="vibe">
+  <button class="back-link" id="backToCravingFromVibe">‹ change food</button>
+  <div class="eyebrow">round three</div>
+  <h2>What's the vibe?</h2>
+  <p class="tag">so we're both dressed for the same evening</p>
+  <div class="vibe-emoji" id="vibeEmoji" aria-hidden="true">👖</div>
+  <div class="vibe-label" id="vibeLabel" aria-live="polite">jeans &amp; a nice top</div>
+  <input type="range" class="vibe-range" id="vibeRange" min="0" max="4" step="1" value="2" aria-label="How dressed up should we be?">
+  <div class="vibe-ends"><span>sweatpants</span><span>ironed shirt</span></div>
+  <button class="confirm-btn vibe-go" id="vibeGo">that's the vibe</button>
 </div>
 
 <!-- Screen 4: pick a date & time -->
 <div class="screen" id="bookTime">
-  <button class="back-link" id="backToCraving">‹ change food</button>
-  <div class="eyebrow" id="bookEyebrow">round three</div>
+  <button class="back-link" id="backToCraving">‹ change vibe</button>
+  <div class="eyebrow" id="bookEyebrow">round four</div>
   <h2>When's good for you?</h2>
   <p class="tag">grab a time, I'll be there</p>
   <div id="bookingMount"><div id="booking"></div></div>
@@ -529,7 +1158,32 @@
   <img class="sticker alt" src="excited.webp" alt="">
   <div class="eyebrow">it's a date</div>
   <h2 id="finalTitle">Counting down already</h2>
+  <div class="countdown" id="countdown" hidden aria-live="off">
+    <div><b id="cdD">0</b><span>days</span></div>
+    <div><b id="cdH">00</b><span>hours</span></div>
+    <div><b id="cdM">00</b><span>min</span></div>
+    <div><b id="cdS">00</b><span>sec</span></div>
+  </div>
+  <div class="ticket-wrap">
+    <div class="ticket" id="ticket">
+      <div class="ticket-main">
+        <div class="ticket-title">Dinner date, admit two</div>
+        <dl>
+          <div><dt>Guest</dt><dd id="tkGuest">Awa</dd></div>
+          <div><dt>Seat</dt><dd>right next to me</dd></div>
+          <div><dt>Menu</dt><dd id="tkFood">surprise</dd></div>
+          <div><dt>Dress code</dt><dd id="tkVibe">whatever feels good</dd></div>
+          <div class="wide"><dt>When</dt><dd id="tkWhen">TBA</dd></div>
+        </dl>
+      </div>
+      <div class="ticket-stub">
+        <svg id="tkBarcode" viewBox="0 0 56 96" aria-hidden="true"></svg>
+        <span id="tkNo">No. 0001</span>
+      </div>
+    </div>
+  </div>
   <p class="tag" id="finalSub">I'll find us somewhere good. See you soon 💛</p>
+  <button type="button" class="wheel-link shake-hint" id="shakeHint">psst… shake your phone</button>
 </div>
 
 <script src="booking-widget.js"></script>
@@ -541,8 +1195,9 @@
        Screen 1 #stage    → she answers the question (Yes / dodging No)
        Screen 2 #burst    → confirmation + confetti, "what are we eating?"
        Screen 3 #craving  → pick a food (or type a custom one)
+       Screen 3b #vibe    → dress-code slider (ends up in the calendar entry)
        Screen 4 #bookTime → BookingWidget: pick an actual date & time
-       Screen 5 #finalMsg → wrap-up, shows the confirmed choice + slot
+       Screen 5 #finalMsg → wrap-up: live countdown + screenshot-able ticket
 
      Screens are just <div class="screen"> elements toggled via the
      "show" class (see the .screen CSS above). Only one is visible
@@ -550,9 +1205,11 @@
      hide the current screen, show the next one.
      ═══════════════════════════════════════════════════════════════ */
 
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // ---- decorative starfield behind everything ----
   const sky = document.getElementById('sky');
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 55; i++) {
     const s = document.createElement('div');
     s.className = 'star';
     const size = Math.random() * 2 + 1;
@@ -561,8 +1218,29 @@
     s.style.left = Math.random() * 100 + '%';
     s.style.top = Math.random() * 100 + '%';
     s.style.animationDelay = (Math.random() * 3) + 's';
+    s.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
     sky.appendChild(s);
   }
+
+  // NEW: a shooting star every 6–14 seconds
+  function shootingStar() {
+    if (!reduceMotion && !document.hidden) {
+      const s = document.createElement('div');
+      s.className = 'shooting';
+      s.style.left = (Math.random() * 60) + '%';
+      s.style.top = (Math.random() * 35) + '%';
+      sky.appendChild(s);
+      setTimeout(() => s.remove(), 1300);
+    }
+    setTimeout(shootingStar, 6000 + Math.random() * 8000);
+  }
+  setTimeout(shootingStar, 3500);
+
+  // NEW: if she switches tabs, the tab title begs her to come back
+  const originalTitle = document.title;
+  document.addEventListener('visibilitychange', () => {
+    document.title = document.hidden ? 'hey, come back 🥺' : originalTitle;
+  });
 
   // ---- element references, grouped by which screen they belong to ----
   const noBtn = document.getElementById('no');
@@ -570,6 +1248,7 @@
   const caption = document.getElementById('caption');
 
   const burst = document.getElementById('burst');
+  const burstTag = document.getElementById('burstTag');
   const continueBtn = document.getElementById('continueBtn');
 
   const cravingScreen = document.getElementById('craving');
@@ -578,6 +1257,10 @@
   const customWrap = document.getElementById('customWrap');
   const customInput = document.getElementById('customInput');
   const customConfirm = document.getElementById('customConfirm');
+  const homeCard = document.getElementById('homeCard');
+  const homeWrap = document.getElementById('homeWrap');
+  const homeInput = document.getElementById('homeInput');
+  const homeConfirm = document.getElementById('homeConfirm');
 
   const bookTime = document.getElementById('bookTime');
 // const skipBooking = document.getElementById('skipBooking'); //
@@ -604,9 +1287,20 @@
     "still no. try the other one",
     "this button is committed to the bit"
   ];
+
+  // NEW: the No button's own label changes as it runs, and it shrinks a bit each time
+  const noLabels = [
+    "No", "are you sure?", "really sure?", "think again",
+    "pls 🥺", "last chance", "you're breaking my heart", "ok wow", "still no?", "hmm"
+  ];
+
+  // NEW: after this many dodges the No button gives up and turns into a Yes
+  const SURRENDER_AT = 14;
+
   let lineIndex = 0;
   let dodgeCount = 0;
   let yesScale = 1;
+  let surrendered = false;
 
   // first dodge: switch #no from normal document flow to position:fixed
   // (adds the .fixed class from the CSS above) so it can be placed anywhere.
@@ -622,7 +1316,9 @@
 
   // Position the caption centered under the Yes button, clamped to viewport
   function positionCaption() {
-    const yesRect = yesBtn.getBoundingClientRect();
+    const maybe = document.getElementById('maybe');
+    const anchor = (maybe && !maybe.hidden) ? maybe : yesBtn;
+    const yesRect = anchor.getBoundingClientRect();
     const centerX = yesRect.left + yesRect.width / 2;
     const top = yesRect.bottom + 14;
     const clampedX = Math.min(Math.max(centerX, 130), window.innerWidth - 130);
@@ -630,14 +1326,26 @@
     caption.style.top = top + 'px';
   }
 
+  function showCaption(text) {
+    caption.classList.remove('visible');
+    setTimeout(() => {
+      caption.textContent = text;
+      positionCaption();
+      caption.classList.add('visible');
+    }, 150);
+  }
+
   // Areas the No button should never land on top of — headline, subtext, Yes button
   function getSafeZones() {
     const pad = 22;
     const zones = [];
     const guarded = [
+      document.querySelector('#stage .eyebrow'),
       document.querySelector('#stage h1'),
       document.querySelector('#stage .sub'),
-      yesBtn
+      yesBtn,
+      caption,
+      document.getElementById('maybe')
     ];
     guarded.forEach(elm => {
       if (!elm) return;
@@ -660,8 +1368,29 @@
   // close to the cursor/finger that triggered the dodge and (b) doesn't
   // overlap any of the safe zones above. Tries up to 40 times, then just
   // gives up and uses the last attempt (better than an infinite loop).
+  // The mousemove/mouseenter handlers fire many times per actual attempt
+  // (the button is still gliding near the cursor), so movement happens on
+  // every trigger but a "try" only counts once per COUNT_COOLDOWN ms.
+  // Without this, one swipe burned through all dodges and it surrendered.
+  const COUNT_COOLDOWN = 700;
+  let lastCountedAt = 0;
+
   function moveNoButton(clientX, clientY) {
+    if (surrendered) return;
     fixNoButtonPosition();
+
+    const now = Date.now();
+    const counts = now - lastCountedAt > COUNT_COOLDOWN;
+
+    if (counts) {
+      lastCountedAt = now;
+      dodgeCount++;
+
+      // new label + slightly smaller each time (bottoms out at 70%)
+      noBtn.textContent = noLabels[Math.min(dodgeCount, noLabels.length - 1)];
+      const noScale = Math.max(0.7, 1 - dodgeCount * 0.03);
+      noBtn.style.transform = `scale(${noScale})`;
+    }
 
     const btnRect = noBtn.getBoundingClientRect();
     const w = btnRect.width || 100;
@@ -687,21 +1416,53 @@
     noBtn.style.left = newX + 'px';
     noBtn.style.top = newY + 'px';
 
-    dodgeCount++;
-    positionCaption();
-    caption.classList.remove('visible');
-    setTimeout(() => {
-      caption.textContent = lines[lineIndex % lines.length];
-      lineIndex++;
-      positionCaption();
-      caption.classList.add('visible');
-    }, 150);
+    if (!counts) return; // just a re-dodge mid-glide, not a new try
+
+    // tiny buzz on Android phones (iPhones just ignore this)
+    if (navigator.vibrate) navigator.vibrate(12);
 
     // yes button grows a little every few dodges, gently
     if (dodgeCount % 2 === 0 && yesScale < 1.5) {
       yesScale += 0.07;
-      yesBtn.style.transform = `scale(${yesScale})`;
-      positionCaption();
+      yesBtn.style.setProperty('--yes-scale', yesScale);
+    }
+
+    if (dodgeCount >= SURRENDER_AT) {
+      setTimeout(surrender, 650); // let it finish gliding first
+      showCaption("okay. the no button gave up.");
+      return;
+    }
+
+    positionCaption();
+    showCaption(lines[lineIndex % lines.length]);
+    lineIndex++;
+  }
+
+  function surrender() {
+    surrendered = true;
+    noBtn.textContent = "fine, yes 💛";
+    noBtn.style.transform = 'scale(1)';
+    noBtn.classList.add('surrendered');
+    maybeBtn.hidden = false; // a third option appears out of nowhere
+    document.getElementById('buttonRow').classList.add('has-maybe');
+    positionCaption();
+
+    // make sure the surrendered button isn't sitting on top of anything now
+    // (offsetWidth = its final, full-size width; the scale-up is still animating)
+    const zones = getSafeZones();
+    const w = noBtn.offsetWidth, h = noBtn.offsetHeight;
+    const cx = parseFloat(noBtn.style.left) || 16, cy = parseFloat(noBtn.style.top) || 16;
+    const offScreen = cx + w > window.innerWidth - 16 || cy + h > window.innerHeight - 16;
+    if (offScreen || overlapsZone(cx, cy, w, h, zones)) {
+      for (let i = 0; i < 80; i++) {
+        const x = 16 + Math.random() * Math.max(1, window.innerWidth - w - 32);
+        const y = 16 + Math.random() * Math.max(1, window.innerHeight - h - 32);
+        if (!overlapsZone(x, y, w, h, zones) || i === 79) {
+          noBtn.style.left = x + 'px';
+          noBtn.style.top = y + 'px';
+          break;
+        }
+      }
     }
   }
 
@@ -712,20 +1473,23 @@
 
   // Mobile: dodge on touchstart (before the tap registers as a click)
   noBtn.addEventListener('touchstart', (e) => {
+    if (surrendered) return; // let the tap through as a normal click
     e.preventDefault();
     const t = e.touches[0];
     moveNoButton(t.clientX, t.clientY);
   }, { passive: false });
 
-  // Fallback: if somehow clicked/tapped anyway, still dodge instead of firing
+  // Fallback: if somehow clicked/tapped anyway, still dodge instead of firing.
+  // Once it has surrendered, clicking it counts as a yes.
   noBtn.addEventListener('click', (e) => {
     e.preventDefault();
+    if (surrendered) { sayYes(noBtn, 'no'); return; }
     moveNoButton(e.clientX, e.clientY);
   });
 
   // Also dodge if the pointer merely gets close, for extra chaos on desktop
   document.addEventListener('mousemove', (e) => {
-    if (!noBtn.classList.contains('fixed')) return;
+    if (surrendered || !noBtn.classList.contains('fixed')) return;
     const rect = noBtn.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -739,27 +1503,79 @@
      SCREEN 1 → 2 — clicking Yes
      ═══════════════════════════════════════════════════════════════ */
 
-  yesBtn.addEventListener('click', () => {
-    document.getElementById('stage').style.display = 'none';
-    caption.classList.remove('visible');
-    burst.classList.add('show');
-    launchConfetti();
-  });
+  const maybeBtn = document.getElementById('maybe');
+  yesBtn.addEventListener('click', () => sayYes(yesBtn, 'yes'));
+  maybeBtn.addEventListener('click', () => sayYes(maybeBtn, 'maybe'));
 
-  function launchConfetti() {
+  // via: 'yes' | 'no' (the surrendered No button) | 'maybe'
+  function sayYes(fromBtn, via) {
+    const r = fromBtn.getBoundingClientRect();
+    heartBurst(r.left + r.width / 2, r.top + r.height / 2);
+
+    // the tag line reacts to how much of a fight it was
+    if (via === 'maybe') {
+      burstTag.textContent = "Maybe counts as yes. I don't make the rules.";
+    } else if (via === 'no') {
+      burstTag.textContent = "Even the no button said yes. Respect.";
+    } else if (dodgeCount === 0) {
+      burstTag.textContent = "Straight to yes, no hesitation. Love that.";
+    } // otherwise keep the original "That took embarrassingly long, but okay"
+
+    setTimeout(() => {
+      document.getElementById('stage').style.display = 'none';
+      noBtn.style.display = 'none';
+      maybeBtn.hidden = true;
+      caption.classList.remove('visible');
+      burst.classList.add('show');
+      launchConfetti(90);
+    }, reduceMotion ? 0 : 380);
+  }
+
+  function heartBurst(x, y) {
+    if (reduceMotion) return;
+    const hearts = ['💛', '💗', '✨', '💕'];
+    for (let i = 0; i < 16; i++) {
+      const h = document.createElement('div');
+      h.className = 'heart-pop';
+      h.textContent = hearts[i % hearts.length];
+      const angle = (Math.PI * 2 * i) / 16 + Math.random() * 0.3;
+      const dist = 90 + Math.random() * 90;
+      h.style.left = x + 'px';
+      h.style.top = y + 'px';
+      h.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      h.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      h.style.setProperty('--rot', (Math.random() * 60 - 30) + 'deg');
+      h.style.fontSize = (16 + Math.random() * 14) + 'px';
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 1200);
+    }
+  }
+
+  // now with a few hearts mixed in and some sideways drift
+  function launchConfetti(count) {
+    if (reduceMotion) return;
     const colors = ['#ffb4c6', '#ffd9a0', '#f2c17b', '#fff7ee'];
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < count; i++) {
       const piece = document.createElement('div');
       piece.className = 'confetti-piece';
-      const size = Math.random() * 8 + 5;
-      piece.style.width = size + 'px';
-      piece.style.height = size * 0.4 + 'px';
-      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      if (Math.random() < 0.18) {
+        piece.textContent = Math.random() < 0.5 ? '♥' : '💛';
+        piece.style.color = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.fontSize = (12 + Math.random() * 10) + 'px';
+      } else {
+        const size = Math.random() * 8 + 5;
+        piece.style.width = size + 'px';
+        piece.style.height = (Math.random() < 0.3 ? size : size * 0.4) + 'px';
+        if (Math.random() < 0.3) piece.style.borderRadius = '50%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      }
       piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.setProperty('--drift', (Math.random() * 160 - 80) + 'px');
+      piece.style.setProperty('--spin', (Math.random() * 900 - 450) + 'deg');
       piece.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
       piece.style.animationDelay = (Math.random() * 0.6) + 's';
       document.body.appendChild(piece);
-      setTimeout(() => piece.remove(), 4000);
+      setTimeout(() => piece.remove(), 5000);
     }
   }
 
@@ -779,23 +1595,26 @@
 
   document.getElementById('backToCraving').addEventListener('click', () => {
     bookTime.classList.remove('show');
-    cravingScreen.classList.add('show');
+    vibeScreen.classList.add('show');
   });
 
   /* ═══════════════════════════════════════════════════════════════
      SCREEN 3 — the craving grid
-     Each <div class="craving-card" data-value="X"> needs a matching
+     Each <button class="craving-card" data-value="X"> needs a matching
      entry in BOTH lookup tables below, or it falls back to generic
      text (still works, just less polished). Adding a new card = add
-     the <div> in the HTML + one line in each object here.
+     the <button> in the HTML + one line in each object here.
      ═══════════════════════════════════════════════════════════════ */
 
   // confirmation line shown on screen 5
+  // (FIX: Sushi and Meat were missing, so they got the generic text without emoji)
   const foodMessages = {
     Pizza: "Pizza it is 🍕",
     Pasta: "Pasta it is 🍝",
     Salad: "Salad it is 🥗",
     Asian: "Asian food it is 🍜",
+    Sushi: "Sushi it is 🍣",
+    Meat: "Steak night it is 🥩",
     Afro: "Afro food it is 🍲",
     Burger: "Burger it is 🍔"
   };
@@ -806,6 +1625,8 @@
     Pasta: "Dinner: Pasta",
     Salad: "Dinner: Salad",
     Asian: "Dinner: Asian food",
+    Sushi: "Dinner: Sushi",
+    Meat: "Dinner: Meat",
     Afro: "Dinner: Afro food",
     Burger: "Dinner: Burger"
   };
@@ -814,22 +1635,24 @@
     card.addEventListener('click', () => {
       const val = card.getAttribute('data-value');
 
-      if (val === '__custom') {
-        customWrap.classList.add('show');
-        customCard.classList.add('selected');
-        cravingGrid.querySelectorAll('.craving-card').forEach(c => {
-          if (c !== customCard) c.classList.remove('selected');
-        });
-        customInput.focus();
+      if (val === '__custom' || val === '__home') {
+        const wrap = val === '__custom' ? customWrap : homeWrap;
+        const other = val === '__custom' ? homeWrap : customWrap;
+        other.classList.remove('show');
+        wrap.classList.add('show');
+        cravingGrid.querySelectorAll('.craving-card').forEach(c => c.classList.toggle('selected', c === card));
+        wrap.querySelector('input').focus();
         return;
       }
 
       customWrap.classList.remove('show');
+      homeWrap.classList.remove('show');
       cravingGrid.querySelectorAll('.craving-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
 
       const bookingLabel = foodLabels[val] || ("Dinner: " + val);
-      setTimeout(() => goToBooking(foodMessages[val] || (val + " it is"), bookingLabel), 350);
+      const short = `${card.lastChild.textContent.trim()} ${card.querySelector('.emoji').textContent}`;
+      setTimeout(() => goToVibe(foodMessages[val] || (val + " it is"), bookingLabel, short), 380);
     });
   });
 
@@ -839,11 +1662,228 @@
       customInput.focus();
       return;
     }
-    goToBooking(text + " it is 🍽️", "Dinner: " + text);
+    goToVibe(text + " it is 🍽️", "Dinner: " + text, text + " 🍽️");
   });
 
   customInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') customConfirm.click();
+  });
+
+  // NEW: cooking at home — idea is optional, empty means "chef's surprise"
+  homeConfirm.addEventListener('click', () => {
+    const idea = homeInput.value.trim();
+    const dish = idea || "chef's surprise";
+    goToVibe(
+      `Cooking at home: ${dish} 🍳`,                 // final screen line
+      `Cooking at home: ${dish}`,                    // calendar entry
+      `home-cooked ${dish} 🍳`,                       // ticket "Menu"
+      1                                              // preset vibe: "comfy, but cute"
+    );
+  });
+
+  homeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') homeConfirm.click();
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: WHEEL OF FORTUNE (screen 3 overlay)
+     Built from the craving cards above (everything except "Custom"),
+     so it always matches the grid. 3 spins max, then the wheel is
+     "tired" and its last answer stands.
+     ═══════════════════════════════════════════════════════════════ */
+
+  const MAX_SPINS = 3;
+  const wheelOverlay = document.getElementById('wheelOverlay');
+  const wheelSvg = document.getElementById('wheel');
+  const wheelPointer = document.getElementById('wheelPointer');
+  const spinBtn = document.getElementById('spinBtn');
+  const wheelResult = document.getElementById('wheelResult');
+  const wheelActions = document.getElementById('wheelActions');
+  const wheelRespin = document.getElementById('wheelRespin');
+
+  const wheelItems = [...cravingGrid.querySelectorAll('.craving-card')]
+    .filter(c => !c.dataset.value.startsWith('__'))   // no Custom / cook-at-home on the wheel
+    .map(c => ({
+      value: c.dataset.value,
+      emoji: c.querySelector('.emoji').textContent,
+      label: c.lastChild.textContent.trim(),
+      card: c
+    }));
+
+  // segment colors: light / dark alternating, text color picked to match
+  const wheelColors = [
+    ['#ffb4c6', '#24121f'], ['#5b3150', '#fff7ee'],
+    ['#ffd9a0', '#24121f'], ['#46233f', '#fff7ee'],
+    ['#f2c17b', '#24121f'], ['#5b3150', '#fff7ee'],
+    ['#ffc9b0', '#24121f'], ['#46233f', '#fff7ee']
+  ];
+
+  const SEG = 360 / wheelItems.length;
+  let wheelRot = 0, spinning = false, spinCount = 0, wheelPick = null;
+
+  (function buildWheel() {
+    const NS = 'http://www.w3.org/2000/svg';
+    const R = 140;
+    const mk = (tag, attrs, text) => {
+      const n = document.createElementNS(NS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      if (text != null) n.textContent = text;
+      return n;
+    };
+    const rad = d => (d - 90) * Math.PI / 180; // 0° = top, clockwise
+
+    wheelSvg.appendChild(mk('circle', { r: 148, fill: '#24121f', stroke: '#f2c17b', 'stroke-width': 3 }));
+
+    wheelItems.forEach((it, i) => {
+      const [bg, fg] = wheelColors[i % wheelColors.length];
+      const a0 = rad(i * SEG - SEG / 2), a1 = rad(i * SEG + SEG / 2);
+      wheelSvg.appendChild(mk('path', {
+        d: `M0 0 L${R * Math.cos(a0)} ${R * Math.sin(a0)} A${R} ${R} 0 0 1 ${R * Math.cos(a1)} ${R * Math.sin(a1)} Z`,
+        fill: bg
+      }));
+      const g = mk('g', { transform: `rotate(${i * SEG})` });
+      g.appendChild(mk('text', { y: -102, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 24 }, it.emoji));
+      g.appendChild(mk('text', {
+        y: -74, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: fg,
+        'font-size': 12, 'font-weight': 700, 'font-family': 'Helvetica Neue, Arial, sans-serif'
+      }, it.label));
+      wheelSvg.appendChild(g);
+
+      // little pegs on the rim between segments
+      const pa = rad(i * SEG + SEG / 2);
+      wheelSvg.appendChild(mk('circle', { cx: 144 * Math.cos(pa), cy: 144 * Math.sin(pa), r: 3.2, fill: '#fff7ee' }));
+    });
+  })();
+
+  // ---- sound + flapper wobble each time a peg passes the pointer ----
+  let audioCtx = null;
+  function blip() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.value = 1500;
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + 0.05);
+    } catch (e) { /* no sound, no problem */ }
+  }
+
+  function currentAngle() {
+    const m = getComputedStyle(wheelSvg).transform;
+    if (!m || m === 'none') return 0;
+    const v = m.match(/matrix\(([^)]+)\)/);
+    if (!v) return 0;
+    const [a, b] = v[1].split(',').map(Number);
+    return Math.atan2(b, a) * 180 / Math.PI;
+  }
+
+  function trackTicks() {
+    let lastSeg = null;
+    (function frame() {
+      if (!spinning) return;
+      const seg = Math.floor(((currentAngle() + SEG / 2) % 360 + 360) % 360 / SEG);
+      if (lastSeg !== null && seg !== lastSeg) {
+        blip();
+        if (wheelPointer.animate) {
+          wheelPointer.animate(
+            [{ transform: 'rotate(0deg)' }, { transform: 'rotate(-22deg)' }, { transform: 'rotate(0deg)' }],
+            { duration: 110 }
+          );
+        }
+      }
+      lastSeg = seg;
+      requestAnimationFrame(frame);
+    })();
+  }
+
+  function spinWheel() {
+    if (spinning || spinCount >= MAX_SPINS) return;
+    spinning = true;
+    spinCount++;
+    spinBtn.disabled = true;
+    wheelActions.hidden = true;
+    wheelResult.classList.remove('pop');
+    wheelResult.textContent = '';
+
+    // iPhones only allow sound after a tap — this call happens inside one
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+    const i = Math.floor(Math.random() * wheelItems.length);
+    const jitter = (Math.random() - 0.5) * SEG * 0.7;      // don't always land dead center
+    const target = -(i * SEG) + jitter;                     // angle that puts segment i under the pointer
+    const delta = (((target - wheelRot) % 360) + 360) % 360;
+    const duration = reduceMotion ? 0.6 : 4.8;
+    wheelRot += (reduceMotion ? 360 : 360 * 6) + delta;
+
+    wheelSvg.style.transition = `transform ${duration}s cubic-bezier(.12, .7, .14, 1)`;
+    wheelSvg.style.transform = `rotate(${wheelRot}deg)`;
+    trackTicks();
+
+    setTimeout(() => wheelLanded(wheelItems[i]), duration * 1000 + 100);
+  }
+
+  function wheelLanded(it) {
+    spinning = false;
+    wheelPick = it;
+
+    const verdicts = [
+      `The wheel has spoken: ${it.label} ${it.emoji}`,
+      `Second opinion: ${it.label} ${it.emoji}`,
+      `Final answer: ${it.label} ${it.emoji}. The wheel needs a nap now.`
+    ];
+    wheelResult.textContent = verdicts[Math.min(spinCount, verdicts.length) - 1];
+    void wheelResult.offsetWidth; // restart the pop animation
+    wheelResult.classList.add('pop');
+
+    const respinLabels = ['hmm, spin again', 'one last time, promise'];
+    if (spinCount < MAX_SPINS) {
+      wheelRespin.hidden = false;
+      wheelRespin.textContent = respinLabels[spinCount - 1] || 'spin again';
+      spinBtn.disabled = false;
+    } else {
+      wheelRespin.hidden = true;
+      spinBtn.textContent = 'done';
+    }
+    wheelActions.hidden = false;
+
+    const r = wheelResult.getBoundingClientRect();
+    heartBurst(r.left + r.width / 2, r.top + r.height / 2);
+    if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+  }
+
+  function openWheel() {
+    wheelOverlay.hidden = false;
+    setTimeout(() => spinBtn.focus(), 50);
+  }
+
+  function closeWheel() {
+    if (spinning) return; // no escaping mid-spin
+    wheelOverlay.hidden = true;
+  }
+
+  document.getElementById('openWheel').addEventListener('click', openWheel);
+  document.getElementById('closeWheel').addEventListener('click', closeWheel);
+  spinBtn.addEventListener('click', spinWheel);
+  wheelRespin.addEventListener('click', spinWheel);
+  wheelOverlay.addEventListener('click', (e) => { if (e.target === wheelOverlay) closeWheel(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !wheelOverlay.hidden) closeWheel();
+  });
+
+  document.getElementById('wheelAccept').addEventListener('click', () => {
+    if (!wheelPick) return;
+    const it = wheelPick;
+    wheelOverlay.hidden = true;
+    customWrap.classList.remove('show');
+    homeWrap.classList.remove('show');
+    cravingGrid.querySelectorAll('.craving-card').forEach(c => c.classList.remove('selected'));
+    it.card.classList.add('selected');
+    const label = (foodLabels[it.value] || ('Dinner: ' + it.label)) + " (the wheel's pick)";
+    setTimeout(() => goToVibe(`${it.label} ${it.emoji}, the wheel decided`, label, `${it.label} ${it.emoji} (wheel's pick)`), 380);
   });
 
   /* ═══════════════════════════════════════════════════════════════
@@ -854,12 +1894,63 @@
      to be reused as-is on other sites, not edited.
      ═══════════════════════════════════════════════════════════════ */
 
-  function goToBooking(choiceLine, bookingLabel) {
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: SCREEN 3b — vibe check. Food choice lands here first; the
+     chosen vibe gets appended to the booking label, so it ends up in
+     the calendar entry ("Dinner: Pizza · jeans & a nice top").
+     ═══════════════════════════════════════════════════════════════ */
+
+  const vibeScreen = document.getElementById('vibe');
+  const vibeRange = document.getElementById('vibeRange');
+  const vibeEmoji = document.getElementById('vibeEmoji');
+  const vibeLabel = document.getElementById('vibeLabel');
+
+  const vibes = [
+    { emoji: '🩳', label: 'sweatpants chill',     short: 'sweatpants chill' },
+    { emoji: '🧸', label: 'comfy, but cute',      short: 'comfy but cute' },
+    { emoji: '👖', label: 'jeans & a nice top',   short: 'jeans & a nice top' },
+    { emoji: '✨', label: "I'll make an effort",  short: 'making an effort' },
+    { emoji: '👔', label: "I'm ironing a shirt",  short: 'shirt gets ironed' }
+  ];
+
+  let pendingFoodLabel = null;
+  let cravingShort = null;  // e.g. "Pizza 🍕", for the ticket
+  let chosenVibe = vibes[2];
+
+  vibeRange.addEventListener('input', () => {
+    chosenVibe = vibes[+vibeRange.value];
+    vibeEmoji.textContent = chosenVibe.emoji;
+    vibeLabel.textContent = chosenVibe.label;
+    vibeEmoji.classList.remove('pop');
+    void vibeEmoji.offsetWidth;
+    vibeEmoji.classList.add('pop');
+    if (navigator.vibrate) navigator.vibrate(8);
+  });
+
+  function goToVibe(choiceLine, bookingLabel, short, presetVibe) {
+    if (presetVibe != null) {
+      vibeRange.value = presetVibe;
+      vibeRange.dispatchEvent(new Event('input'));
+    }
     cravingChoice = choiceLine;
+    pendingFoodLabel = bookingLabel;
+    cravingShort = short;
     cravingScreen.classList.remove('show');
-    bookTime.classList.add('show');
-    initBookingWidget(bookingLabel);
+    vibeScreen.classList.add('show');
+    vibeScreen.scrollTop = 0;
   }
+
+  document.getElementById('vibeGo').addEventListener('click', () => {
+    vibeScreen.classList.remove('show');
+    bookTime.classList.add('show');
+    bookTime.scrollTop = 0;
+    initBookingWidget(`${pendingFoodLabel} · ${chosenVibe.short}`);
+  });
+
+  document.getElementById('backToCravingFromVibe').addEventListener('click', () => {
+    vibeScreen.classList.remove('show');
+    cravingScreen.classList.add('show');
+  });
 
   /*skipBooking.addEventListener('click', () => {
     showFinal(cravingChoice, null, null); 
@@ -885,6 +1976,39 @@
       // page move on to screen 5 automatically. See bookingOnBooked below.
       onBooked: bookingOnBooked,
 
+      // Sent to Code.gs → shows up in the calendar event, both emails
+      // and the .ics invite (keys must match EXTRA_LABELS in Code.gs)
+      extra: () => ({
+        food: cravingShort || '',
+        vibe: chosenVibe ? chosenVibe.label : ''
+      }),
+
+      // Which contact fields to show (no name, no phone — I know who she is)
+      fields: ['email', 'note'],
+
+      // The joke T&C checkbox above "Lock it in" (must be ticked)
+      consent: { required: true },
+
+      // Page-specific wording, overrides the widget's neutral defaults
+      text: {
+        chooseTime: 'Dinner date, admit two',
+        yourDetails: 'Last step, then it\'s official',
+        email: 'Your email. A calendar invite lands here, so "I forgot" is officially off the table',
+        emailPlaceholder: 'no excuses @ anywhere.com',
+        note: 'Side quests, dealbreakers, dessert demands (optional)',
+        notePlaceholder: 'e.g. I\'m picking the dessert, no discussion',
+        book: 'Lock it in 🔒',
+        booking: 'Locking it in…',
+        required: 'Need a real email, otherwise the calendar can\'t remind you',
+        errTaken: 'Someone just took that slot, pick another one',
+        errGeneric: 'That didn\'t go through, try again?',
+        loading: 'checking my extremely busy schedule…',
+        noSlots: 'I\'m booked that day (sadly). Try another one?',
+        // ✏️ the dessert clause checkbox + its error message
+        consent: 'I agree that dessert gets shared. (Or not, I\'m not a monster.)',
+        consentRequired: 'The dessert clause is non-negotiable 🍰'
+      },
+
       // Only used while endpoint is 'mock' (ignored once you point
       // endpoint at a real Apps Script URL — a real backend defines its
       // own hours). Currently unused since endpoint above is already a
@@ -903,7 +2027,7 @@
 
   function bookingOnBooked(details) {
     const niceWhen = formatBookingDate(details.date, details.time);
-    showFinal(cravingChoice, niceWhen, true);
+    showFinal(cravingChoice, niceWhen, true, details.date, details.time);
   }
 
   function formatBookingDate(isoDate, time) {
@@ -915,16 +2039,188 @@
     return `${weekday}, ${month} ${day}${time ? ' at ' + time : ''}`;
   }
 
-  function showFinal(choiceLine, whenLine, booked) {
+  function showFinal(choiceLine, whenLine, booked, isoDate, time) {
     bookTime.classList.remove('show');
     cravingScreen.classList.remove('show');
+    vibeScreen.classList.remove('show');
     finalTitle.textContent = 'Counting down already';
     if (booked && whenLine) {
-      finalSub.textContent = `${choiceLine || ''} — see you ${whenLine} 💛`;
+      finalSub.textContent = "Screenshot your ticket. No refunds, no excuses 💛";
     } else {
-      finalSub.textContent = `${choiceLine ? choiceLine + ' — ' : ''}I'll text you to lock in a time. See you soon 💛`;
+      finalSub.textContent = "I'll text you to lock in a time. See you soon 💛";
     }
+    fillTicket(whenLine);
     finalMsg.classList.add('show');
+    finalMsg.scrollTop = 0;
+    startCountdown(isoDate, time);
+    setupShake();
+    setTimeout(() => launchConfetti(50), 250);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: the ticket on screen 5 (guest name comes from the headline
+     on screen 1, so you only have to change it there)
+     ═══════════════════════════════════════════════════════════════ */
+
+  function fillTicket(whenLine) {
+    document.getElementById('tkGuest').textContent = document.querySelector('#stage .name').textContent;
+    document.getElementById('tkFood').textContent = cravingShort || 'surprise';
+    document.getElementById('tkVibe').textContent = chosenVibe ? chosenVibe.label : 'whatever feels good';
+    document.getElementById('tkWhen').textContent = whenLine || 'TBA, by text';
+    document.getElementById('tkNo').textContent = 'No. ' + String(Math.floor(Math.random() * 9000) + 1000);
+
+    // fake barcode: random horizontal bars
+    const bc = document.getElementById('tkBarcode');
+    bc.innerHTML = '';
+    let y = 0;
+    while (y < 96) {
+      const h = [1, 1, 2, 3][Math.floor(Math.random() * 4)];
+      if (Math.random() > 0.35) {
+        const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        r.setAttribute('x', 0); r.setAttribute('y', y);
+        r.setAttribute('width', 56); r.setAttribute('height', h);
+        r.setAttribute('fill', '#24121f');
+        bc.appendChild(r);
+      }
+      y += h + 1;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: EASTER EGGS
+       - shake the phone on screen 5 → confetti (iPhones need one tap
+         on the hint first, Apple requires permission for motion)
+       - tap any sticker 5× quickly → it does a spin
+     ═══════════════════════════════════════════════════════════════ */
+
+  function celebrate() {
+    launchConfetti(70);
+    heartBurst(window.innerWidth / 2, window.innerHeight / 2);
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+  }
+
+  // ✏️ the little "psst…" link under the ticket — edit the wording here
+  const SHAKE_TEXTS = {
+    desktop: 'psst… click here',                       // computers (no shaking possible)
+    iphone:  'psst… tap here, then shake your phone',  // iPhone needs one tap for motion permission
+    android: 'psst… shake your phone',                 // Android works right away
+    ready:   'now shake it 📳'                         // iPhone, after permission was granted
+  };
+
+  const shakeHint = document.getElementById('shakeHint');
+  const needsMotionPermission = typeof DeviceMotionEvent !== 'undefined' &&
+                                typeof DeviceMotionEvent.requestPermission === 'function';
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  let shakeOn = false, lastAcc = null, lastShake = 0;
+
+  function onMotion(e) {
+    const a = e.accelerationIncludingGravity;
+    if (!a || a.x == null) return;
+    if (lastAcc) {
+      const d = Math.abs(a.x - lastAcc.x) + Math.abs(a.y - lastAcc.y) + Math.abs(a.z - lastAcc.z);
+      if (d > 28 && Date.now() - lastShake > 1200) {
+        lastShake = Date.now();
+        if (finalMsg.classList.contains('show')) celebrate();
+      }
+    }
+    lastAcc = { x: a.x, y: a.y, z: a.z };
+  }
+
+  function enableShake() {
+    if (shakeOn) return;
+    if (needsMotionPermission) {
+      DeviceMotionEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('devicemotion', onMotion);
+          shakeOn = true;
+          shakeHint.textContent = SHAKE_TEXTS.ready;
+        }
+      }).catch(() => {});
+    } else if ('DeviceMotionEvent' in window) {
+      window.addEventListener('devicemotion', onMotion);
+      shakeOn = true;
+    }
+  }
+
+  function setupShake() {
+    if (!isTouch) {
+      shakeHint.textContent = SHAKE_TEXTS.desktop;
+    } else if (needsMotionPermission) {
+      shakeHint.textContent = SHAKE_TEXTS.iphone;
+    } else {
+      shakeHint.textContent = SHAKE_TEXTS.android;
+      enableShake();
+    }
+  }
+
+  shakeHint.addEventListener('click', () => {
+    enableShake();
+    celebrate();
+  });
+
+  document.querySelectorAll('.sticker').forEach(st => {
+    let taps = 0, timer = null;
+    st.addEventListener('click', () => {
+      taps++;
+      clearTimeout(timer);
+      timer = setTimeout(() => { taps = 0; }, 1500);
+      if (taps >= 5) {
+        taps = 0;
+        st.classList.remove('party');
+        void st.offsetWidth;
+        st.classList.add('party');
+        const r = st.getBoundingClientRect();
+        heartBurst(r.left + r.width / 2, r.top + r.height / 2);
+        if (navigator.vibrate) navigator.vibrate(40);
+      }
+    });
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     NEW: SCREEN 5 — live countdown to the booked date
+     The title says "Counting down already", so now it actually does.
+     Hidden if there's no booked date/time (e.g. skip link re-enabled).
+     ═══════════════════════════════════════════════════════════════ */
+
+  let countdownTimer = null;
+
+  function startCountdown(isoDate, time) {
+    const box = document.getElementById('countdown');
+    clearInterval(countdownTimer);
+    if (!isoDate || !time) { box.hidden = true; return; }
+
+    const target = new Date(`${isoDate}T${time.length === 5 ? time : '19:00'}:00`);
+    if (isNaN(target)) { box.hidden = true; return; }
+
+    const els = {
+      d: document.getElementById('cdD'),
+      h: document.getElementById('cdH'),
+      m: document.getElementById('cdM'),
+      s: document.getElementById('cdS')
+    };
+    const pad = n => String(n).padStart(2, '0');
+
+    function tick() {
+      let diff = Math.max(0, Math.floor((target - Date.now()) / 1000));
+      if (diff === 0) {
+        clearInterval(countdownTimer);
+        box.hidden = true;
+        finalTitle.textContent = "It's time 💛";
+        return;
+      }
+      const d = Math.floor(diff / 86400); diff -= d * 86400;
+      const h = Math.floor(diff / 3600);  diff -= h * 3600;
+      const m = Math.floor(diff / 60);
+      const s = diff - m * 60;
+      els.d.textContent = d;
+      els.h.textContent = pad(h);
+      els.m.textContent = pad(m);
+      els.s.textContent = pad(s);
+    }
+
+    box.hidden = false;
+    tick();
+    countdownTimer = setInterval(tick, 1000);
   }
 
   /* ═══════════════════════════════════════════════════════════════
